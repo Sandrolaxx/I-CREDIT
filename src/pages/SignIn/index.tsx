@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import getValidationErrors from '../../utils/getValidationErros';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import { useAuth } from '../../hooks/auth';
 
 import loginImg from '../../assets/login.png';
 import {
@@ -20,7 +21,7 @@ import {
 } from './styles';
 
 interface SignInFormData {
-    email: string;
+    login: string;
     password: string;
   }
 
@@ -29,6 +30,7 @@ const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const [isEnabled, setIsEnabled] = useState(false);
+  const { signIn } = useAuth();
 
   const toggleSwitch = () => setIsEnabled((previousState):boolean => !previousState);
   const handleSignIn = useCallback(
@@ -36,20 +38,20 @@ const SignIn: React.FC = () => {
       try {
         formRef.current?.setErrors({});
         const schema = Yup.object().shape({
-          email: Yup.string()
+          login: Yup.string()
             .email('Digite um e-mail valido')
             .required('E-mail obrigatorio'),
-          senha: Yup.string().required('Senha obrigatoria'),
+          password: Yup.string().min(6, 'Senha no mínimo 6 dígitos!'),
         });
 
         await schema.validate(data, {
           abortEarly: false,
         });
 
-        // await signIn({
-        //   email: data.email,
-        //   password: data.password,
-        // });
+        await signIn({
+          login: data.login,
+          password: data.password,
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err);
@@ -65,7 +67,7 @@ const SignIn: React.FC = () => {
         );
       }
     },
-    [],
+    [signIn],
   );
 
   return (
@@ -85,7 +87,7 @@ const SignIn: React.FC = () => {
                             autoCorrect={false}
                             autoCapitalize="none"
                             keyboardType="email-address"
-                            name='email'
+                            name='login'
                             icon='mail'
                             placeholder='E-mail'
                             returnKeyType="next"
@@ -96,7 +98,7 @@ const SignIn: React.FC = () => {
                         <Input
                             ref={passwordInputRef}
                             secureTextEntry
-                            name='senha'
+                            name='password'
                             icon='lock'
                             placeholder='Senha'
                             returnKeyType="send"
